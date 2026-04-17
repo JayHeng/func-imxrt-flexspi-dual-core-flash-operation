@@ -45,7 +45,7 @@ typedef enum {
 ////////////////////////////////////////////////////////////////////////////////
 #if defined(MC_CORE0)
 
-//static bool is_xip_available = true;
+static bool is_xip_available = true;
 
 void mc_cm33_init(void)
 {
@@ -56,20 +56,27 @@ void mc_cm33_init(void)
 #endif
 }
 
-//__ramfunc 
-void cm33_ready_for_flash_iap(void)
+__ramfunc void mc_cm33_loop_in_sram(void)
 {
-    /* Disable FlexSPI XIP / AHB buffer */
-    FLEXSPI1->MCR0 |= FLEXSPI_MCR0_SWRESET_MASK;
-    while (FLEXSPI1->MCR0 & FLEXSPI_MCR0_SWRESET_MASK);
+    if (!is_xip_available)
+    {
+        /* Disable FlexSPI XIP / AHB buffer */
+        FLEXSPI1->MCR0 |= FLEXSPI_MCR0_SWRESET_MASK;
+        while (FLEXSPI1->MCR0 & FLEXSPI_MCR0_SWRESET_MASK);
 
 #if APP_USE_MCMGR
-    MCMGR_TriggerEvent(kMCMGR_Core1, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_READY);
+        MCMGR_TriggerEvent(kMCMGR_Core1, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_READY);
 #else
-    MU_SendMsgNonBlocking(APP_CM33_MU, CHN_MU_REG_NUM, MU_CMD_FLASH_IAP_READY);
+        MU_SendMsgNonBlocking(APP_CM33_MU, CHN_MU_REG_NUM, MU_CMD_FLASH_IAP_READY);
 #endif
-    
-    //is_xip_available = false;
+        //(void)PRINTF("Send iap ready to Secondary core.\r\n");
+        while(!is_xip_available);
+    }
+}
+
+void cm33_prepare_for_flash_iap(void)
+{
+    is_xip_available = false;
 }
 
 void cm33_back_to_flash_xip(void)
@@ -77,7 +84,7 @@ void cm33_back_to_flash_xip(void)
     //flexspi_nor_init();
     //flexspi_enable_xip();
   
-    //is_xip_available = true;
+    is_xip_available = true;
 }
 
 static void cm33_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *context)
@@ -85,8 +92,7 @@ static void cm33_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *co
     if (eventData == MCMGR_EVENT_FLASH_IAP_NOTIFY)
     {
         (void)PRINTF("Get iap notify from Secondary core.\r\n");
-        cm33_ready_for_flash_iap();
-        (void)PRINTF("Send iap ready to Secondary core.\r\n");
+        cm33_prepare_for_flash_iap();
     }
     if (eventData == MCMGR_EVENT_FLASH_IAP_DONE)
     {

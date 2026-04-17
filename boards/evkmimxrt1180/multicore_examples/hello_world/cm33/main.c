@@ -20,6 +20,7 @@
    
 void mc_cm33_init(void);
 void mc_cm33_register_cb(void);
+void mc_cm33_loop_in_sram(void);
 
 /*******************************************************************************
  * Code
@@ -68,5 +69,6 @@ int main(void)
     
     for (;;)
     {
+        mc_cm33_loop_in_sram();
     }
 }
