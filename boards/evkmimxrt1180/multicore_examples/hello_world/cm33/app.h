@@ -10,6 +10,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define MC_CORE0 1
+#define MC_CORE1 0
+
 /*${macro:start}*/
 /* Address of memory, from which the secondary core will boot */
 #define CORE1_BOOT_ADDRESS    (void *)0x303C0000

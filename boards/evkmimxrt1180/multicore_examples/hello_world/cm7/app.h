@@ -17,6 +17,9 @@ volatile bool g_pinSet = false;
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define MC_CORE0 0
+#define MC_CORE1 1
+
 /*${macro:start}*/
 #define LED_INIT()                    \
     rgpio_pin_config_t led_config = { \
