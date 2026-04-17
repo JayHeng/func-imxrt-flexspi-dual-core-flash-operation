@@ -51,6 +51,8 @@ static bool is_xip_available = true;
 
 void mc_cm33_init(void)
 {
+    (void)PRINTF("----------------------------------\r\n");
+    (void)PRINTF("XIP is on.\r\n");
 #if !APP_USE_MCMGR
     MU_Init(APP_CM33_MU);
     MU_EnableInterrupts(APP_CM33_MU, kMU_Rx0FullInterruptEnable);
@@ -102,18 +104,16 @@ void print_flash_content(void)
 void cm33_prepare_for_flash_iap(void)
 {
     print_flash_content();
-
     is_xip_available = false;
+    (void)PRINTF("XIP is off.\r\n");
 }
 
 void cm33_back_to_flash_xip(void)
 {
-    //flexspi_nor_init();
-    //flexspi_enable_xip();
-  
     is_xip_available = true;
-    
+    (void)PRINTF("XIP is on\r\n");
     print_flash_content();
+    (void)PRINTF("----------------------------------\r\n");
 }
 
 static void cm33_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *context)
@@ -122,10 +122,11 @@ static void cm33_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *co
     {
         (void)PRINTF("Get iap notify from Secondary core.\r\n");
         cm33_prepare_for_flash_iap();
+        (void)PRINTF("Send iap ready to Secondary core (will do IAP later).\r\n");
     }
     if (eventData == MCMGR_EVENT_FLASH_IAP_PASS)
     {
-        (void)PRINTF("Get iap pass from Secondary core.\r\n");
+        (void)PRINTF("Get iap pass from Secondary core (IAP is done).\r\n");
         cm33_back_to_flash_xip();
     }
     if (eventData == MCMGR_EVENT_FLASH_IAP_FAIL)
@@ -174,7 +175,7 @@ void mc_cm7_init(void)
 #endif
 }
 
-void cm7_notify_for_flash_iap(void)
+void mc_cm7_notify_for_flash_iap(void)
 {
 #if APP_USE_MCMGR
     MCMGR_TriggerEvent(kMCMGR_Core0, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_NOTIFY);

@@ -19,7 +19,7 @@
 
 void mc_cm7_init(void);
 void mc_cm7_register_cb(void);
-void cm7_notify_for_flash_iap(void);
+void mc_cm7_notify_for_flash_iap(void);
 
 /*******************************************************************************
  * Code
@@ -54,7 +54,7 @@ int main(void)
     
     mc_cm7_init();
     mc_cm7_register_cb();
-    cm7_notify_for_flash_iap();
+    mc_cm7_notify_for_flash_iap();
 
     /* Configure LED */
     LED_INIT();
