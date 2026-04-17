@@ -17,6 +17,9 @@
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
+   
+void mc_cm33_init(void);
+void mc_cm33_register_cb(void);
 
 /*******************************************************************************
  * Code
@@ -60,6 +63,9 @@ int main(void)
     (void)MCMGR_StartCore(kMCMGR_Core1, (void *)(char *)CORE1_BOOT_ADDRESS, 2, kMCMGR_Start_Synchronous);
     (void)PRINTF("The secondary core application has been started.\r\n");
 
+    mc_cm33_init();
+    mc_cm33_register_cb();
+    
     for (;;)
     {
     }

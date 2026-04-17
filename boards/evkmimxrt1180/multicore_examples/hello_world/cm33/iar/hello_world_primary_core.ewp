@@ -251,6 +251,7 @@
                     <state>CPU_MIMXRT1189CVM8C_cm33</state>
                     <state>MIMXRT1189_cm33_SERIES</state>
                     <state>MULTICORE_APP=1</state>
+                    <state>MC_CORE0</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>

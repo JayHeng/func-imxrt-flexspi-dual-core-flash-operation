@@ -17,6 +17,10 @@
  * Prototypes
  ******************************************************************************/
 
+void mc_cm7_init(void);
+void mc_cm7_register_cb(void);
+void cm7_notify_for_flash_iap(void);
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -47,6 +51,10 @@ int main(void)
     {
         SDK_DelayAtLeastUs(1000000U, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
     }
+    
+    mc_cm7_init();
+    mc_cm7_register_cb();
+    cm7_notify_for_flash_iap();
 
     /* Configure LED */
     LED_INIT();
