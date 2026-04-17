@@ -7,6 +7,7 @@
 
 #include "fsl_debug_console.h"
 #include "fsl_mu.h"
+#include "fsl_cache.h"
 #include "mcmgr.h"
 
 /*******************************************************************************
@@ -30,7 +31,8 @@ typedef enum {
 
 #define MCMGR_EVENT_FLASH_IAP_NOTIFY  (0U)
 #define MCMGR_EVENT_FLASH_IAP_READY   (1U)
-#define MCMGR_EVENT_FLASH_IAP_DONE    (2U)
+#define MCMGR_EVENT_FLASH_IAP_PASS    (2U)
+#define MCMGR_EVENT_FLASH_IAP_FAIL    (3U)
 
 #define FLASH_IAP_EVENT_TYPE    kMCMGR_RemoteApplicationEvent
 
@@ -60,9 +62,15 @@ __ramfunc void mc_cm33_loop_in_sram(void)
 {
     if (!is_xip_available)
     {
+        /* Wait for bus to be idle before changing flash configuration. */
+        while (!(0U != (FLEXSPI1->STS0 & FLEXSPI_STS0_ARBIDLE_MASK)) && (0U != (FLEXSPI1->STS0 & FLEXSPI_STS0_SEQIDLE_MASK)))
+        {
+        }
         /* Disable FlexSPI XIP / AHB buffer */
         FLEXSPI1->MCR0 |= FLEXSPI_MCR0_SWRESET_MASK;
-        while (FLEXSPI1->MCR0 & FLEXSPI_MCR0_SWRESET_MASK);
+        while (0U != (FLEXSPI1->MCR0 & FLEXSPI_MCR0_SWRESET_MASK))
+        {
+        }
 
 #if APP_USE_MCMGR
         MCMGR_TriggerEvent(kMCMGR_Core1, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_READY);
@@ -74,8 +82,27 @@ __ramfunc void mc_cm33_loop_in_sram(void)
     }
 }
 
+void print_flash_content(void)
+{
+    uint32_t serialNorAddress;        /* Address of the serial nor device location */
+    uint32_t FlexSPISerialNorAddress; /* Address of the serial nor device in FLEXSPI memory */
+#ifndef SECTOR_INDEX_FROM_END
+#define SECTOR_INDEX_FROM_END 1U
+#endif
+    /* Erase a sector from target device dest address */
+    serialNorAddress        = 16u * 1024u * 1024u - (SECTOR_INDEX_FROM_END * 4u * 1024u);
+    FlexSPISerialNorAddress = FlexSPI1_AMBA_BASE + serialNorAddress;
+    
+    DCACHE_InvalidateByRange(FlexSPISerialNorAddress, 256u);
+    
+    uint8_t pattern = *(uint8_t *)FlexSPISerialNorAddress;
+    (void)PRINTF("Addr 0x%x: 0x%x.\r\n", FlexSPISerialNorAddress, pattern);
+}
+
 void cm33_prepare_for_flash_iap(void)
 {
+    print_flash_content();
+
     is_xip_available = false;
 }
 
@@ -85,6 +112,8 @@ void cm33_back_to_flash_xip(void)
     //flexspi_enable_xip();
   
     is_xip_available = true;
+    
+    print_flash_content();
 }
 
 static void cm33_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *context)
@@ -94,10 +123,14 @@ static void cm33_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *co
         (void)PRINTF("Get iap notify from Secondary core.\r\n");
         cm33_prepare_for_flash_iap();
     }
-    if (eventData == MCMGR_EVENT_FLASH_IAP_DONE)
+    if (eventData == MCMGR_EVENT_FLASH_IAP_PASS)
     {
-        (void)PRINTF("Get iap done from Secondary core.\r\n");
+        (void)PRINTF("Get iap pass from Secondary core.\r\n");
         cm33_back_to_flash_xip();
+    }
+    if (eventData == MCMGR_EVENT_FLASH_IAP_FAIL)
+    {
+        (void)PRINTF("Get iap fail from Secondary core.\r\n");
     }
 }
 
@@ -150,20 +183,27 @@ void cm7_notify_for_flash_iap(void)
 #endif
 }
 
-void cm7_do_flash_iap_task(void)
+int iap_main(void);
+
+int cm7_do_flash_iap_task(void)
 {
-    //flexspi_nor_erase_sector(FLASH_ADDR);
-    //flexspi_nor_program_page(FLASH_ADDR, data, len);
-  
-    SDK_DelayAtLeastUs(3000000U, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
+    return iap_main();
+    //SDK_DelayAtLeastUs(3000000U, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
 }
 
 static void cm7_flash_iap_cb(mcmgr_core_t coreNum, uint16_t eventData, void *context)
 {
     if (eventData == MCMGR_EVENT_FLASH_IAP_READY)
     {
-        cm7_do_flash_iap_task();
-        MCMGR_TriggerEvent(kMCMGR_Core0, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_DONE);
+        int res = cm7_do_flash_iap_task();
+        if (res == 0)
+        {
+            MCMGR_TriggerEvent(kMCMGR_Core0, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_PASS);
+        }
+        else
+        {
+            MCMGR_TriggerEvent(kMCMGR_Core0, FLASH_IAP_EVENT_TYPE, MCMGR_EVENT_FLASH_IAP_FAIL);
+        }
     }
 }
 
