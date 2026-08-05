@@ -31,6 +31,9 @@ void mc_cm33_loop_in_sram(void);
  */
 int main(void)
 {
+    (void)MCMGR_EarlyInit();
+    Prepare_CM7(CORE1_KICKOFF_ADDRESS);
+
     /* Initialize MCMGR, install generic event handlers */
     (void)MCMGR_Init();
 

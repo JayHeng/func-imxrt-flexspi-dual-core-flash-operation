@@ -50,7 +50,7 @@ void SystemInitHook(void)
        function as close to the reset entry as possible to allow CoreUp event
        triggering. The SystemInitHook() weak function overloading is used in this
        application. */
-    (void)MCMGR_EarlyInit();
-    Prepare_CM7(CORE1_KICKOFF_ADDRESS);
+    //(void)MCMGR_EarlyInit();
+    //Prepare_CM7(CORE1_KICKOFF_ADDRESS);
 }
 /*${function:end}*/
