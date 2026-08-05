@@ -65,7 +65,7 @@ __ramfunc void mc_cm33_loop_in_sram(void)
     if (!is_xip_available)
     {
         /* Wait for bus to be idle before changing flash configuration. */
-        while (!(0U != (FLEXSPI1->STS0 & FLEXSPI_STS0_ARBIDLE_MASK)) && (0U != (FLEXSPI1->STS0 & FLEXSPI_STS0_SEQIDLE_MASK)))
+        while (!((0U != (FLEXSPI1->STS0 & FLEXSPI_STS0_ARBIDLE_MASK)) && (0U != (FLEXSPI1->STS0 & FLEXSPI_STS0_SEQIDLE_MASK))))
         {
         }
         /* Disable FlexSPI XIP / AHB buffer */
