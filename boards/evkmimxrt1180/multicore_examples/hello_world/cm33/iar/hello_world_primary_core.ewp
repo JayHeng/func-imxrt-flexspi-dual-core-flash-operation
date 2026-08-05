@@ -252,6 +252,7 @@
                     <state>MIMXRT1189_cm33_SERIES</state>
                     <state>MULTICORE_APP=1</state>
                     <state>MC_CORE0</state>
+                    <state>ENABLE_RAM_VECTOR_TABLE</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -727,7 +728,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state></state>
+                    <state>hello_world_primary_core.srec</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -798,7 +799,7 @@
                 </option>
                 <option>
                     <name>IlinkConfigDefines</name>
-                    <state></state>
+                    <state>__ram_vector_table__=1</state>
                 </option>
                 <option>
                     <name>IlinkMapFile</name>

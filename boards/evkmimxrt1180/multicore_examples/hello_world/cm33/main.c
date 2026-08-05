@@ -22,6 +22,8 @@ void mc_cm33_init(void);
 void mc_cm33_register_cb(void);
 void mc_cm33_loop_in_sram(void);
 
+extern int MU1_IRQHandler(void);
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -36,6 +38,8 @@ int main(void)
 
     /* Initialize MCMGR, install generic event handlers */
     (void)MCMGR_Init();
+    
+    InstallIRQHandler(MU1_IRQn, (uint32_t)MU1_IRQHandler);
 
     /* Init board hardware.*/
     BOARD_InitHardware();
